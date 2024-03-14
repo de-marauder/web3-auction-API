@@ -40,9 +40,9 @@ end time and the beneficiary wallet address.
     > POST /api/v1/login
   - logout
     > DELETE /api/v1/logout
-- Auction (protected routes -- requires `Authorization` header in request)
+- Auction (protected routes -- requires a bearer \<token> as  `Authorization` header in request)
   - auction status
-    > GET api/v1/auction/status
+    > GET api/v1/auction/statusPOST
   - auction history
     > GET api/v1/auction/history
   - submit bid
