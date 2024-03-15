@@ -24,6 +24,9 @@ export class User {
 
   @Prop({ type: Boolean, default: false, select: false })
   deleted: boolean;
+
+  @Prop({ type: Boolean, default: false, select: false })
+  loggedIn: boolean;
 }
 
 export type UserDocument = User & mongoose.Document;
