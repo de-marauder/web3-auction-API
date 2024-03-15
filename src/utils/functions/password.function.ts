@@ -15,3 +15,20 @@ export const hash = async (value: string): Promise<string> => {
   const hashedPass = (await asyncScript(value, salt, 64)) as Buffer;
   return `${hashedPass.toString('hex')}.${salt}`;
 };
+
+/**
+ *
+ * @param hash hash coming from database
+ * @param value value that the user supply
+ * @returns returns a boolean
+ */
+export const verifyHash = async (hash: string, value: string) => {
+  if (!(hash && value))
+    throw new BadRequestException('No password supplied for authentication');
+  const [storedHashPass, salt] = hash.split('.');
+  const hashedPass = (await asyncScript(value, salt, 64)) as Buffer;
+
+  Logger.log(hashedPass.toString('hex'));
+  Logger.log(storedHashPass);
+  return hashedPass.toString('hex') === storedHashPass;
+};
