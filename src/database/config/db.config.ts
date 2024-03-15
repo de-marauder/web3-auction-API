@@ -12,11 +12,9 @@ export const dbSchemaOptions: SchemaOptions = {
       delete ret._id;
       delete ret.password;
       delete ret.salt;
-      delete ret.visible;
       delete ret.secret;
       delete ret.code;
       delete ret.pin;
-      delete ret.accountActivated;
       return ret;
     },
   },
@@ -27,11 +25,9 @@ export const dbSchemaOptions: SchemaOptions = {
       delete ret._id;
       delete ret.password;
       delete ret.salt;
-      delete ret.visible;
       delete ret.secret;
       delete ret.code;
       delete ret.pin;
-      delete ret.accountActivated;
       return ret;
     },
   },
