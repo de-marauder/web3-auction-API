@@ -1,9 +1,9 @@
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { User } from '../schema/user.schema';
 import { BaseService } from 'src/database/service/db.service';
-import { CreateUserDto } from '../dto/user.dto';
+import { CreateUserDto, VerifyUserDto } from '../dto/user.dto';
 import { generateUniqueString } from 'src/utils/functions/utils.functions';
 import { hash } from 'src/utils/functions/password.function';
 
@@ -22,5 +22,20 @@ export class UserService extends BaseService<User> {
     dto.password = await hash(dto.password);
     dto.username = dto.username || `user-${generateUniqueString(4)}`;
     return await this.create(dto);
+  }
+
+  async verify({ email, code }: VerifyUserDto) {
+    const user = await this.findOneOrErrorOut({ email });
+
+    if (user.verificationCode !== code) {
+      throw new BadRequestException();
+    }
+
+    user.activated = true;
+    user.verificationCode = '';
+    user.loggedIn = true;
+    await user.save();
+
+    return user;
   }
 }

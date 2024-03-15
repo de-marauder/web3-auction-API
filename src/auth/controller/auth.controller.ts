@@ -1,66 +1,51 @@
-import {
-  BadRequestException,
-  Body,
-  Controller,
-  Delete,
-  Logger,
-  Post,
-} from '@nestjs/common';
-import { UserService } from 'src/user/service/user.service';
+import { Body, Controller, Delete, Logger, Post } from '@nestjs/common';
 import { randomSixDigits } from 'src/utils/functions/utils.functions';
 import { LoginUserDto, RegisterUserDto } from '../dto/auth.dto';
-import { verifyHash } from 'src/utils/functions/password.function';
-import { TokenService } from 'src/token/service/token.service';
 import { TokenDecorator } from 'src/token/decorator/token.decorator';
 import { TokenDataDto } from 'src/token/dto/token.dto';
+import {
+  LoginUserDtoValidator,
+  RegisterUserDtoValidator,
+} from '../validator/auth.validator';
+import { ObjectValidationPipe } from 'src/utils/pipe/validation.pipe';
+import { TokenDataDtoValidator } from 'src/token/validator/token.validator';
+import { AuthService } from '../service/auth.service';
+import { TokenService } from 'src/token/service/token.service';
 
 @Controller('auth')
 export class AuthController {
   private readonly logger = new Logger(AuthController.name);
 
   constructor(
-    private readonly userService: UserService,
+    private readonly authService: AuthService,
     private readonly tokenService: TokenService,
   ) { }
 
   @Post('register')
-  async register(@Body() createUserDto: RegisterUserDto) {
-    // Accept email and password
-    if (!createUserDto.email || !createUserDto.password) {
-      throw new BadRequestException();
-    }
-    const exists = await this.userService.model.findOne({
-      $or: [
-        { email: createUserDto.email },
-        { username: createUserDto.username },
-      ],
-    });
-    if (exists) {
-      throw new BadRequestException(
-        'User with email or username already exists',
-      );
-    }
+  async register(
+    @Body(new ObjectValidationPipe(RegisterUserDtoValidator))
+    registerUserDto: RegisterUserDto,
+  ) {
     const verificationCode = randomSixDigits();
-    const user = await this.userService.createUser({
-      ...createUserDto,
-      verificationCode,
+
+    const user = await this.authService.register({
+      ...registerUserDto,
+      code: verificationCode,
     });
+
     return { user };
   }
 
   @Post('login')
-  async login(@Body() { email, password }: LoginUserDto) {
-    if (!email || !password) {
-      throw new BadRequestException('Required email or password');
-    }
-    const user = await this.userService.findOneOrErrorOut({ email });
-    if (!(await verifyHash(user.password, password))) {
-      throw new BadRequestException('Incorrect password');
-    }
+  async login(
+    @Body(new ObjectValidationPipe(LoginUserDtoValidator))
+    { email, password }: LoginUserDto,
+  ) {
+    const user = await this.authService.verifyPassword({ email, password });
     const token = await this.tokenService.signToken({
+      id: user.id,
       email: user.email,
       username: user.username,
-      id: user.id,
     });
     user.loggedIn = true;
     await user.save();
@@ -68,9 +53,11 @@ export class AuthController {
   }
 
   @Delete('logout')
-  async logout(@TokenDecorator() { id }: TokenDataDto) {
-    const user = await this.userService.findByIdOrErrorOut(id);
-    user.loggedIn = false;
-    await user.save();
+  async logout(
+    @TokenDecorator(new ObjectValidationPipe(TokenDataDtoValidator))
+    { id }: TokenDataDto,
+  ) {
+    await this.authService.logout(id);
+    return 'logged out';
   }
 }

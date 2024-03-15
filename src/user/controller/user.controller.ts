@@ -1,14 +1,9 @@
-import {
-  BadRequestException,
-  Body,
-  Controller,
-  Logger,
-  Post,
-} from '@nestjs/common';
-
+import { Body, Controller, Logger, Post } from '@nestjs/common';
 import { UserService } from '../service/user.service';
 import { VerifyUserDto } from '../dto/user.dto';
 import { TokenService } from 'src/token/service/token.service';
+import { ObjectValidationPipe } from 'src/utils/pipe/validation.pipe';
+import { VerifyUserDtoValidator } from '../validator/user.validator';
 
 @Controller('user')
 export class UserController {
@@ -21,26 +16,16 @@ export class UserController {
 
   @Post('verify')
   async verifyUser(
-    @Body()
+    @Body(new ObjectValidationPipe(VerifyUserDtoValidator))
     { email, code }: VerifyUserDto,
   ) {
-    const user = await this.userService.findOneOrErrorOut({ email });
-
-    if (user.verificationCode !== code) {
-      throw new BadRequestException();
-    }
-
-    user.activated = true;
-    user.verificationCode = '';
-    user.loggedIn = true;
-
+    const user = await this.userService.verify({ email, code });
     const token = await this.tokenService.signToken({
       email: user.email,
       username: user.username,
       id: user.id,
     });
 
-    await user.save();
     return { user, token };
   }
 }
