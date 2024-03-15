@@ -7,7 +7,6 @@ import {
   Post,
 } from '@nestjs/common';
 import { UserService } from 'src/user/service/user.service';
-import { hash } from 'src/utils/functions/password.function';
 import { randomSixDigits } from 'src/utils/functions/utils.functions';
 import { RegisterUserDto } from '../dto/auth.dto';
 
