@@ -23,6 +23,16 @@ describe('AuthController', () => {
     controller = module.get<AuthController>(AuthController);
   });
 
+  describe('Register', () => {
+    it('Should return user object', async () => {
+      const register = await controller.register({});
+
+      expect(register).toBeDefined();
+      expect(register.username).toBeDefined();
+      expect(register.email).toBeDefined();
+    });
+  });
+
   it('should be defined', () => {
     expect(controller).toBeDefined();
   });
