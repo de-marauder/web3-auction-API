@@ -11,6 +11,8 @@ import { randomSixDigits } from 'src/utils/functions/utils.functions';
 import { LoginUserDto, RegisterUserDto } from '../dto/auth.dto';
 import { verifyHash } from 'src/utils/functions/password.function';
 import { TokenService } from 'src/token/service/token.service';
+import { TokenDecorator } from 'src/token/decorator/token.decorator';
+import { TokenDataDto } from 'src/token/dto/token.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -66,5 +68,9 @@ export class AuthController {
   }
 
   @Delete('logout')
-  async logout() { }
+  async logout(@TokenDecorator() { id }: TokenDataDto) {
+    const user = await this.userService.findByIdOrErrorOut(id);
+    user.loggedIn = false;
+    await user.save();
+  }
 }
