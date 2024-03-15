@@ -24,10 +24,10 @@ export class TokenService {
     this.expiresIn = !isNaN(expiresIn) ? expiresIn : this._YEAR;
   }
 
-  signToken({ id, email }: TokenDataDto): Promise<string> {
+  signToken({ id, email, username }: TokenDataDto): Promise<string> {
     return new Promise((resolve, reject) => {
       jwt.sign(
-        { id, email },
+        { id, email, username },
         this.tokenSecret,
         { expiresIn: this.expiresIn },
         (err, encoded: string) => {
