@@ -8,6 +8,7 @@ import {
 import { TokenDataDto } from './../dto/token.dto';
 import { ConfigService } from '@nestjs/config';
 import { EnvConfigEnum } from 'src/config/env.enum';
+import { Errors } from 'src/utils/enums/utils.enums';
 
 @Injectable()
 export class TokenService {
@@ -47,7 +48,7 @@ export class TokenService {
         (err, decoded: TokenDataDto) => {
           if (err) {
             if (err.name === 'TokenExpiredError') {
-              throw new UnauthorizedException('token expired');
+              throw new UnauthorizedException(Errors.TOKEN_EXPIRED);
             }
             throw new BadRequestException(err.message);
           }
