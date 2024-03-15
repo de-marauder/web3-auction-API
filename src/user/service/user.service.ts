@@ -4,6 +4,9 @@ import { Injectable, Logger } from '@nestjs/common';
 import { User } from '../schema/user.schema';
 import { BaseService } from 'src/database/service/db.service';
 import { CreateUserDto } from '../dto/user.dto';
+import { generateUniqueString } from 'src/utils/functions/utils.functions';
+import { hash } from 'src/utils/functions/password.function';
+
 @Injectable()
 export class UserService extends BaseService<User> {
   private readonly logger = new Logger(UserService.name);
@@ -15,7 +18,9 @@ export class UserService extends BaseService<User> {
     super(UserModel);
   }
 
-  async createUser(data: CreateUserDto) {
-    return await this.UserModel.create(data);
+  async createUser(dto: CreateUserDto) {
+    dto.password = await hash(dto.password);
+    dto.username = dto.username || `user-${generateUniqueString(4)}`;
+    return await this.create(dto);
   }
 }

@@ -43,9 +43,11 @@ describe('UserService', () => {
       email: 'john.doe@example.com',
       password: '<PASSWORD>',
       avatar: 'http://example.com',
+      verificationCode: '123456',
     };
     const createdUser = await service.createUser(newUser);
 
+    delete newUser.verificationCode;
     expect(mockUserModel.create).toHaveBeenCalledWith(newUser); // Verify mock call
     expect(createdUser).toEqual(expect.objectContaining(newUser)); // Expect partial match
   });

@@ -19,6 +19,9 @@ export class User {
   @Prop({ type: Boolean, default: false })
   activated: boolean;
 
+  @Prop({ type: String, default: '' })
+  verificationCode: string;
+
   @Prop({ type: Boolean, default: false, select: false })
   deleted: boolean;
 }

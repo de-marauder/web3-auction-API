@@ -1,6 +1,4 @@
-export type CreateUserDto = {
-  username: string;
-  password: string;
-  avatar: string;
-  email: string;
-};
+import { RegisterUserDto } from 'src/auth/dto/auth.dto';
+import { User } from '../schema/user.schema';
+
+export type CreateUserDto = RegisterUserDto & Pick<User, 'verificationCode'>;
