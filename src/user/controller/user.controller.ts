@@ -32,6 +32,7 @@ export class UserController {
 
     user.activated = true;
     user.verificationCode = '';
+    user.loggedIn = true;
 
     const token = await this.tokenService.signToken({
       email: user.email,
