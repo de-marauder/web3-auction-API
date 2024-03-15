@@ -10,6 +10,17 @@ import { envValidator } from 'src/env/validator/env.validator';
 
 describe('UserController', () => {
   let controller: UserController;
+  const testCreateUserDto = {
+    email: 'johndoe@gmail.com',
+    password: '<PASSWORD>',
+    username: '',
+    avatar: 'http://example.com',
+  };
+  const user = new User();
+  user.email = testCreateUserDto.email;
+  user.password = testCreateUserDto.password;
+  user.avatar = testCreateUserDto.avatar;
+  user.username = testCreateUserDto.username || `user-xxxx`;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -20,7 +31,9 @@ describe('UserController', () => {
         ConfigService,
         {
           provide: getModelToken(User.name),
-          useValue: Model<User>,
+          useValue: {
+            findOne: jest.fn().mockResolvedValue(user),
+          },
         },
       ],
       imports: [
@@ -33,6 +46,23 @@ describe('UserController', () => {
     }).compile();
 
     controller = module.get<UserController>(UserController);
+  });
+
+  describe('Verify user', () => {
+    it('should return token', async () => {
+      const verificationDetails = { email: 'johndoe@gmail.com', code: '1234' };
+      const result = await controller.verifyUser(verificationDetails);
+      expect(result).toBeDefined();
+      expect(result.token).toBeDefined();
+    });
+    it('should return activated user', async () => {
+      const verificationDetails = { email: 'johndoe@gmail.com', code: '1234' };
+
+      const result = await controller.verifyUser(verificationDetails);
+      expect(result).toBeDefined();
+      expect(result.user).toBeDefined();
+      expect(result.user.activated).toBe(true);
+    });
   });
 
   it('should be defined', () => {
