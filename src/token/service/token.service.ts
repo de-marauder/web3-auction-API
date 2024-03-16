@@ -3,6 +3,7 @@ import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
+  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { TokenDataDto } from './../dto/token.dto';
@@ -12,7 +13,8 @@ import { Errors } from 'src/utils/enums/utils.enums';
 
 @Injectable()
 export class TokenService {
-  private _YEAR: number = 365 * 24 * 60 * 60 * 1000; // 1 year
+  private logger = new Logger(TokenService.name);
+  private YEAR: number = 365 * 24 * 60 * 60 * 1000; // 1 year
   private expiresIn: number;
   private tokenSecret: jwt.Secret;
 
@@ -22,7 +24,7 @@ export class TokenService {
       10,
     );
     this.tokenSecret = config.getOrThrow(EnvConfigEnum.TOKEN_SECRET);
-    this.expiresIn = !isNaN(expiresIn) ? expiresIn : this._YEAR;
+    this.expiresIn = !isNaN(expiresIn) ? expiresIn : this.YEAR;
   }
 
   signToken({ id, email, username }: TokenDataDto): Promise<string> {
@@ -40,6 +42,7 @@ export class TokenService {
   }
 
   verifyToken(token: string): Promise<TokenDataDto> {
+    this.logger.log(token);
     return new Promise((resolve) => {
       jwt.verify(
         token,
