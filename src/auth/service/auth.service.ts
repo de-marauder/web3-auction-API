@@ -32,7 +32,10 @@ export class AuthService {
   }
 
   async verifyPassword({ email, password }: LoginUserDto) {
-    const user = await this.userService.findOneOrErrorOut({ email });
+    const user = await this.userService.findOneSelectAndPopulateOrErrorOut(
+      { email },
+      '+password -verificationCode',
+    );
     if (!(await verifyHash(user.password, password))) {
       throw new BadRequestException('Incorrect password');
     }
