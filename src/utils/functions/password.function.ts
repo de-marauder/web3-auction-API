@@ -28,7 +28,5 @@ export const verifyHash = async (hash: string, value: string) => {
   const [storedHashPass, salt] = hash.split('.');
   const hashedPass = (await asyncScript(value, salt, 64)) as Buffer;
 
-  Logger.log(hashedPass.toString('hex'));
-  Logger.log(storedHashPass);
   return hashedPass.toString('hex') === storedHashPass;
 };
