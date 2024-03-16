@@ -7,6 +7,8 @@ import { DatabaseModule } from './database/database.module';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { RequestLoggerMiddleware } from './utils/middleware/requestLogger.middleware';
+import { TokenMiddleware } from './token/middleware/token.middleware';
+import { TokenModule } from './token/token.module';
 
 @Module({
   controllers: [AppController],
@@ -20,6 +22,7 @@ import { RequestLoggerMiddleware } from './utils/middleware/requestLogger.middle
     DatabaseModule,
     UserModule,
     AuthModule,
+    TokenModule,
   ],
 })
 export class AppModule {
@@ -28,5 +31,18 @@ export class AppModule {
       path: '*',
       method: RequestMethod.ALL,
     });
+    consumer
+      .apply(TokenMiddleware)
+      .exclude(
+        { path: '/', method: RequestMethod.GET },
+        { path: '/health', method: RequestMethod.GET },
+        { path: '/auth/register', method: RequestMethod.POST },
+        { path: '/auth/login', method: RequestMethod.POST },
+        { path: '/user/verify', method: RequestMethod.POST },
+      )
+      .forRoutes({
+        path: '*',
+        method: RequestMethod.ALL,
+      });
   }
 }
