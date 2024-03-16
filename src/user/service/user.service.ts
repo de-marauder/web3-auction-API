@@ -27,7 +27,7 @@ export class UserService extends BaseService<User> {
   async verify({ email, code }: VerifyUserDto) {
     const user = await this.findOneOrErrorOut({ email });
 
-    if (user.verificationCode !== code) {
+    if (user.verificationCode !== `${code}`) {
       throw new BadRequestException();
     }
 
