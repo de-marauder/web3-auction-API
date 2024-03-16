@@ -1,7 +1,14 @@
-import { Body, Controller, Delete, Logger, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Logger,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { randomSixDigits } from 'src/utils/functions/utils.functions';
 import { LoginUserDto, RegisterUserDto } from '../dto/auth.dto';
-import { TokenDecorator } from 'src/token/decorator/token.decorator';
+import { TokenDecorator, UseToken } from 'src/token/decorator/token.decorator';
 import { TokenDataDto } from 'src/token/dto/token.dto';
 import {
   LoginUserDtoValidator,
@@ -11,8 +18,10 @@ import { ObjectValidationPipe } from 'src/utils/pipe/validation.pipe';
 import { TokenDataDtoValidator } from 'src/token/validator/token.validator';
 import { AuthService } from '../service/auth.service';
 import { TokenService } from 'src/token/service/token.service';
+import { TokenMiddlewareGuard } from 'src/token/guard/token.guard';
 
 @Controller('auth')
+@UseGuards(TokenMiddlewareGuard)
 export class AuthController {
   private readonly logger = new Logger(AuthController.name);
 
@@ -53,6 +62,7 @@ export class AuthController {
   }
 
   @Delete('logout')
+  @UseToken()
   async logout(
     @TokenDecorator(new ObjectValidationPipe(TokenDataDtoValidator))
     { id }: TokenDataDto,
