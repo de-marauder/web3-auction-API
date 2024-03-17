@@ -1,4 +1,3 @@
-import * as Joi from 'joi';
 import { EnvConfigEnum } from './env.enum';
 import { envValidator } from 'src/env/validator/env.validator';
 import {
