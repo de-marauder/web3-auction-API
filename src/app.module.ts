@@ -10,6 +10,7 @@ import { RequestLoggerMiddleware } from './utils/middleware/requestLogger.middle
 import { TokenMiddleware } from './token/middleware/token.middleware';
 import { TokenModule } from './token/token.module';
 import { AuctionModule } from './auction/auction.module';
+import { Web3Module } from './web3/web3.module';
 
 @Module({
   controllers: [AppController],
@@ -25,6 +26,7 @@ import { AuctionModule } from './auction/auction.module';
     AuthModule,
     TokenModule,
     AuctionModule,
+    Web3Module,
   ],
 })
 export class AppModule {
