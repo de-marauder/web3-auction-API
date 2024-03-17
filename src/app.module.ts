@@ -9,6 +9,7 @@ import { AuthModule } from './auth/auth.module';
 import { RequestLoggerMiddleware } from './utils/middleware/requestLogger.middleware';
 import { TokenMiddleware } from './token/middleware/token.middleware';
 import { TokenModule } from './token/token.module';
+import { AuctionModule } from './auction/auction.module';
 
 @Module({
   controllers: [AppController],
@@ -23,6 +24,7 @@ import { TokenModule } from './token/token.module';
     UserModule,
     AuthModule,
     TokenModule,
+    AuctionModule,
   ],
 })
 export class AppModule {
