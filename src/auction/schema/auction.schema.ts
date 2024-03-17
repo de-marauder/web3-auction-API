@@ -9,12 +9,12 @@ export class Auction {
   contractAddress: string;
 
   @Prop({ type: String })
-  BeneficiaryAddress: string;
+  beneficiaryAddress: string;
 
-  @Prop({ type: mongoose.SchemaTypes.ObjectId, ref: 'bid' })
+  @Prop({ type: mongoose.SchemaTypes.ObjectId, default: null, ref: 'bid' })
   highestBid: Bid | mongoose.Types.ObjectId;
 
-  @Prop({ type: String, default: false })
+  @Prop({ type: String })
   endTime: string;
 
   @Prop({ type: Boolean, default: false })
