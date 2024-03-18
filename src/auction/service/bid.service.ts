@@ -13,10 +13,6 @@ export class BidService extends BaseService<Bid> {
     super(BidModel);
   }
 
-  async getHighestBid() { }
-
-  async getStatistics() { }
-
   parsebiddingTime(time: string) {
     const lastChar = time[time.length - 1];
     this.logger.log('typeof time: ', typeof time);

@@ -1,4 +1,3 @@
-import { default as mongoose } from 'mongoose';
 import {
   Controller,
   UseGuards,
@@ -23,7 +22,10 @@ export class AuctionController {
   constructor(private readonly auctionService: AuctionService) { }
 
   @Get(':auctionId/status')
-  async getAuctionStatus() { }
+  async getAuctionStatus(@Param('auctionId') auctionId: string) {
+    const data = await this.auctionService.getStatus(auctionId);
+    return { data };
+  }
 
   @Get(':auctionId/history')
   async getAuctionBidHistory(@Param('auctionId') auctionId: string) {
@@ -31,7 +33,15 @@ export class AuctionController {
   }
 
   @Get(':auctionId/statistics')
-  async getAuctionStatistics() { }
+  async getAuctionStatistics(@Param('auctionId') auctionId: string) {
+    const data = await this.auctionService.getStatistics(auctionId);
+    return {
+      auctionStats: {
+        totalETHVolume: data[0].totalETHVolume,
+        numberOfBids: data[0].numberOfBids,
+      },
+    };
+  }
 
   @Post(':auctionId/submit-bid')
   async submitBid(

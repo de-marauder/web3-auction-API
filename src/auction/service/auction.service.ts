@@ -99,7 +99,20 @@ export class AuctionService extends BaseService<Auction> {
       throw error;
     }
   }
-  async getStatus() { }
+  async getStatus(auctionId: string) {
+    const auction = await this.findOneSelectAndPopulateOrErrorOut(
+      { _id: auctionId },
+      '',
+      [{ path: 'highestBid', populate: 'user' }],
+    );
+    return {
+      status: auction.ended ? 'ended' : 'ongoing',
+      highestBid: auction.highestBid,
+      address: auction.contractAddress,
+      beneficiary: auction.beneficiaryAddress,
+      endTime: auction.endTime,
+    };
+  }
 
   async getBidHistory(auctionId: string) {
     const bids = await this.bidService.find({ auctionId }, [
@@ -107,5 +120,30 @@ export class AuctionService extends BaseService<Auction> {
     ]);
 
     return bids;
+  }
+
+  async getStatistics(auctionId: string) {
+    const pipeline = [
+      { $match: { auctionId } },
+      {
+        $project: {
+          _id: 0,
+          bidAmount: {
+            $convert: {
+              input: '$bidAmount',
+              to: 'double',
+            },
+          }, // convert stored string value to float (double) value
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalETHVolume: { $sum: '$bidAmount' },
+          numberOfBids: { $sum: 1 },
+        },
+      },
+    ];
+    return await this.bidService.model.aggregate(pipeline);
   }
 }
