@@ -11,7 +11,7 @@ export class Auction {
   @Prop({ type: String })
   beneficiaryAddress: string;
 
-  @Prop({ type: mongoose.SchemaTypes.ObjectId, default: null, ref: 'bid' })
+  @Prop({ type: mongoose.SchemaTypes.ObjectId, default: null, ref: 'Bid' })
   highestBid: Bid | mongoose.Types.ObjectId;
 
   @Prop({ type: String })

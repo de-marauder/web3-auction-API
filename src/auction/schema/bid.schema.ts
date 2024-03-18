@@ -11,9 +11,12 @@ export class Bid {
 
   @Prop({
     type: mongoose.SchemaTypes.ObjectId,
-    ref: Auction.name,
+    ref: 'Auction',
   })
   auction: Auction | mongoose.Types.ObjectId;
+
+  @Prop({ type: String })
+  transactionHash: string;
 
   @Prop({ type: String })
   bidderAddress: string;
@@ -23,12 +26,12 @@ export class Bid {
 
   @Prop({
     type: mongoose.SchemaTypes.ObjectId,
-    ref: User.name,
+    ref: 'User',
   })
   user: User | mongoose.Types.ObjectId;
 
   @Prop({ type: String })
-  bidAmount: number;
+  bidAmount: string;
 }
 
 export type BidDocument = Bid & mongoose.Document;
