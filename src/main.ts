@@ -6,6 +6,7 @@ import { ConfigService } from '@nestjs/config';
 import { envConfigValidator } from './config/config.validator';
 import { EnvConfigEnum } from './config/env.enum';
 import { GlobalExceptionsFilter } from './utils/exception/global.exception';
+import { GlobalResponseInterceptor } from './utils/interceptor/global.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -26,6 +27,7 @@ async function bootstrap() {
   const port = configService.get<number>(EnvConfigEnum.PORT);
   app.setGlobalPrefix('api/v1');
 
+  app.useGlobalInterceptors(new GlobalResponseInterceptor());
   await app.listen(port || 3000);
   Logger.debug(`listening on port ${port}`);
 }

@@ -1,0 +1,26 @@
+import {
+  Injectable,
+  NestInterceptor,
+  ExecutionContext,
+  CallHandler,
+} from '@nestjs/common';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { ResponseStatusEnum } from '../enums/utils.enums';
+
+@Injectable()
+export class GlobalResponseInterceptor implements NestInterceptor {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+    return next.handle().pipe(
+      map((data) => {
+        const responseBody = {
+          status: ResponseStatusEnum.SUCCESS,
+          message: 'Request completed successfully',
+          data,
+        };
+
+        return responseBody;
+      }),
+    );
+  }
+}
