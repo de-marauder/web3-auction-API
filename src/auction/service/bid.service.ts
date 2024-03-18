@@ -13,8 +13,6 @@ export class BidService extends BaseService<Bid> {
     super(BidModel);
   }
 
-  async makeBid() { }
-
   async getHighestBid() { }
 
   async getStatistics() { }
@@ -30,40 +28,38 @@ export class BidService extends BaseService<Bid> {
       );
     }
     const timeWithoutLastChar = +time.slice(0, time.length - 1);
-    this.logger.log('timeWithoutLastChar: ', timeWithoutLastChar);
-    this.logger.log('typeof timeWithoutLastChar: ', typeof timeWithoutLastChar);
+
     if (isNaN(timeWithoutLastChar)) {
       throw new BadRequestException(
-        'Invalid bid time. Values before a unit (if passed) should be a valid number'
+        'Invalid bid time. Values before a unit (if passed) should be a valid number',
       );
     }
     let biddingTime: number;
-    const now = Date.now();
     switch (lastChar) {
       case 's':
-        biddingTime = now + timeWithoutLastChar * TimeUnits.SECOND;
+        biddingTime = timeWithoutLastChar * TimeUnits.SECOND;
         break;
       case 'm':
-        biddingTime = now + timeWithoutLastChar * TimeUnits.MINUTE;
+        biddingTime = timeWithoutLastChar * TimeUnits.MINUTE;
         break;
       case 'h':
-        biddingTime = now + timeWithoutLastChar * TimeUnits.HOUR;
+        biddingTime = timeWithoutLastChar * TimeUnits.HOUR;
         break;
       case 'd':
-        biddingTime = now + timeWithoutLastChar * TimeUnits.DAY;
+        biddingTime = timeWithoutLastChar * TimeUnits.DAY;
         break;
       case 'w':
-        biddingTime = now + timeWithoutLastChar * TimeUnits.WEEK;
+        biddingTime = timeWithoutLastChar * TimeUnits.WEEK;
         break;
       case 'M':
-        biddingTime = now + timeWithoutLastChar * TimeUnits.SECOND;
+        biddingTime = timeWithoutLastChar * TimeUnits.MONTH;
         break;
       case 'Y':
-        biddingTime = now + timeWithoutLastChar * TimeUnits.SECOND;
+        biddingTime = timeWithoutLastChar * TimeUnits.YEAR;
         break;
       default:
         if (isNaN(+time)) throw new BadRequestException('Invalid bid time');
-        biddingTime = now + +time; // default to milliseconds
+        biddingTime = +time; // default to seconds
         break;
     }
     return biddingTime;
