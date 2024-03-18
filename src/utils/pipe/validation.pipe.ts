@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, PipeTransform } from '@nestjs/common';
-import { ObjectSchema } from 'joi';
+import { ObjectSchema, StringSchema } from 'joi';
 
 @Injectable()
 export class ObjectValidationPipe implements PipeTransform {
@@ -11,6 +11,19 @@ export class ObjectValidationPipe implements PipeTransform {
       return this.schema.validateAsync(data, {
         stripUnknown: true,
       });
+    } catch (e) {
+      throw new BadRequestException(e.message);
+    }
+  }
+}
+
+@Injectable()
+export class StringValidationPipe implements PipeTransform {
+  constructor(private readonly schema: StringSchema) { }
+  async transform(data: string): Promise<string> {
+    try {
+      const value = await this.schema.validateAsync(data);
+      return value;
     } catch (e) {
       throw new BadRequestException(e.message);
     }

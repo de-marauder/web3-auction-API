@@ -1,0 +1,3 @@
+export enum AUCTION_CONTRACT_GAS {
+  DEPLOYMENT_FEE = '1000000',
+}
