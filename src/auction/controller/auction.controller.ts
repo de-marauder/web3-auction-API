@@ -1,8 +1,18 @@
-import { Controller, UseGuards, Logger, Get, Post, Body } from '@nestjs/common';
+import { default as mongoose } from 'mongoose';
+import {
+  Controller,
+  UseGuards,
+  Logger,
+  Get,
+  Post,
+  Body,
+  Param,
+} from '@nestjs/common';
 import { TokenMiddlewareGuard } from 'src/token/guard/token.guard';
-import { UseToken } from 'src/token/decorator/token.decorator';
+import { TokenDecorator, UseToken } from 'src/token/decorator/token.decorator';
 import { AuctionService } from '../service/auction.service';
-import { deployAuctionDto } from '../dto/auction.dto';
+import { SubmitBidDto, deployAuctionDto } from '../dto/auction.dto';
+import { TokenDataDto } from 'src/token/dto/token.dto';
 
 @Controller('auction')
 @UseGuards(TokenMiddlewareGuard)
@@ -16,13 +26,28 @@ export class AuctionController {
   async getAuctionStatus() { }
 
   @Get(':auctionId/history')
-  async getAuctionBidHistory() { }
+  async getAuctionBidHistory(@Param('auctionId') auctionId: string) {
+    return { history: await this.auctionService.getBidHistory(auctionId) };
+  }
 
   @Get(':auctionId/statistics')
   async getAuctionStatistics() { }
 
   @Post(':auctionId/submit-bid')
-  async submitBid() { }
+  async submitBid(
+    @TokenDecorator() { id }: TokenDataDto,
+    @Param('auctionId') auctionId: string,
+    @Body() { value, from }: SubmitBidDto,
+  ) {
+    const auction = await this.auctionService.findByIdOrErrorOut(auctionId);
+    const bid = await this.auctionService.makeBid(id, auction, from, value);
+
+    auction.highestBid = bid._id;
+    await auction.save();
+    return {
+      auction: await auction.populate({ path: 'highestBid', populate: 'user' }),
+    };
+  }
 
   @Post('/deploy')
   async deployAuctionContract(

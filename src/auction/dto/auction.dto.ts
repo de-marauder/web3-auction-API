@@ -3,3 +3,7 @@ export type deployAuctionDto = {
   beneficiaryAddress: string;
   biddingDuration: string;
 };
+export type SubmitBidDto = {
+  value: string;
+  from: string;
+};
