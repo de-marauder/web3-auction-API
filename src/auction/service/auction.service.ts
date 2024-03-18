@@ -7,7 +7,7 @@ import { BaseService } from 'src/database/service/db.service';
 import { Web3Service } from 'src/web3/service/web3.service';
 import * as AuctionContract from '../abi/SimpleAuction.json';
 import { AUCTION_CONTRACT_GAS } from '../enum/auction.enum';
-import { Errors } from 'src/utils/enums/utils.enums';
+import { Errors, TimeUnits } from 'src/utils/enums/utils.enums';
 import { ContractExecutionError } from 'web3';
 import { Web3ValidatorError } from 'web3-validator';
 
@@ -48,7 +48,9 @@ export class AuctionService extends BaseService<Auction> {
     return await this.AuctionModel.create({
       contractAddress: deployedContract.options.address,
       beneficiaryAddress,
-      endTime: await deployedContract.methods.auctionEndTime().call(),
+      endTime: this.getTimeString(
+        await deployedContract.methods.auctionEndTime().call(),
+      ),
     });
   }
 
@@ -99,18 +101,47 @@ export class AuctionService extends BaseService<Auction> {
       throw error;
     }
   }
+
+  async hasEnded(auction: AuctionDocument) {
+    const contract = new this.web3Service.web3.eth.Contract(
+      AuctionContract.abi,
+      auction.contractAddress,
+    );
+    try {
+      await contract.methods.auctionEnd().call();
+      return true;
+    } catch (error) {
+      if (error instanceof ContractExecutionError) {
+        if (
+          error.innerError.message.includes(Errors.AUCTION_END_ALREADY_CALLED)
+        ) {
+          return true;
+        }
+        if (error.innerError.message.includes(Errors.AUCTION_NOT_ENDED)) {
+          return false;
+        }
+      }
+      throw error;
+    }
+  }
+
   async getStatus(auctionId: string) {
     const auction = await this.findOneSelectAndPopulateOrErrorOut(
       { _id: auctionId },
       '',
       [{ path: 'highestBid', populate: 'user' }],
     );
+    const ended = await this.hasEnded(auction);
+    if (ended !== auction.ended) {
+      auction.ended = ended;
+      await auction.save();
+    }
     return {
       status: auction.ended ? 'ended' : 'ongoing',
       highestBid: auction.highestBid,
       address: auction.contractAddress,
       beneficiary: auction.beneficiaryAddress,
-      endTime: auction.endTime,
+      endTime: this.getTimeString(auction.endTime),
     };
   }
 
@@ -123,6 +154,9 @@ export class AuctionService extends BaseService<Auction> {
   }
 
   async getStatistics(auctionId: string) {
+    if (!(await this.bidService.findOne({ auctionId }))) {
+      return [{ totalETHVolume: 0, numberOfBids: 0 }];
+    }
     const pipeline = [
       { $match: { auctionId } },
       {
@@ -145,5 +179,11 @@ export class AuctionService extends BaseService<Auction> {
       },
     ];
     return await this.bidService.model.aggregate(pipeline);
+  }
+
+  private getTimeString(time: string) {
+    return this.epochTimeToUTCDateString(
+      parseInt(time) / TimeUnits.MILLISECONDS,
+    );
   }
 }

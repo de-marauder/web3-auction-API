@@ -15,8 +15,6 @@ export class BidService extends BaseService<Bid> {
 
   parsebiddingTime(time: string) {
     const lastChar = time[time.length - 1];
-    this.logger.log('typeof time: ', typeof time);
-    this.logger.log('lastChar: ', lastChar);
     const validLastChars = ['s', 'm', 'h', 'd', 'w', 'M', 'Y'];
     if (isNaN(+lastChar) && !validLastChars.includes(lastChar)) {
       throw new BadRequestException(
