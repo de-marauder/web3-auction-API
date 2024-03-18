@@ -28,7 +28,7 @@ end time and the beneficiary wallet address.
 
 ## How to use
 ### Relevant links
-> **Base URL** => \<insert-live-link> <be>
+> **Base URL** => \<insert-live-link> <br>
   [**Postman doc**](https://documenter.getpostman.com/view/20767794/2sA2xpRobz) <br>
   **Documentation Video** => \<link-to-documentation-video>
 - Auth
