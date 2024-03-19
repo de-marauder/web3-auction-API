@@ -37,13 +37,13 @@ jobs:
           node-version: ${{ env.node-version }}
 
       - name: List directory contents
-        run: ls -l
+        run: ls -la
 
       - name: Read environment variables
         run: echo {{ env.ENV_TEST }} > .env.test
 
       - name: List directory contents
-        run: ls -l
+        run: ls -la
 
       - name: Install dependencies
         run: yarn
