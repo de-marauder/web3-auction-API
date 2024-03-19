@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  # Node Backend API
+  backend:
+    build: .
+    restart: on-failure
+    env_file:
+      - .env
+    ports:
+      - "9001:9001" 
+    volumes:
+      - .:/app
+    depends_on:
+      - mongo
+    networks:
+      - app-network
+
+  # Optional MongoDB service
+  mongo:
+    image: mongo:5.0.6
+    restart: on-failure
+    env_file:
+      - .env.docker
+    # environment:
+    #   MONGO_INITDB_ROOT_USERNAME: '${MONGO_ROOT_USER}'
+    #   MONGO_INITDB_ROOT_PASSWORD: '${MONGO_ROOT_PASSWORD}'
+    #   MONGO_INITDB_ROOT_DATABASE: '${MONGO_DATABASE}'
+    ports:
+      - 27017:27017
+    volumes:
+      - mongodb-data:/data/db
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mongodb-data:
+    driver: local
