@@ -53,8 +53,7 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     env:
-      DOCKERHUB_USERNA        if: ${{ github.event_name!= 'pull_request' && github.branch!= 'dev' }}
-ME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
       IMAGE_NAME: web3-auction-api
     steps:
