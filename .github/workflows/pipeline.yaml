@@ -22,7 +22,7 @@ jobs:
   test:
     env:
       # Node version to use, defaults to the current LTS version.
-      node-version: "16.x"
+      node-version: "18.x"
       ENV_TEST: ${{ secrets.ENV_TEST }}
 
     runs-on: ubuntu-latest
