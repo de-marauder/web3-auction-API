@@ -40,7 +40,7 @@ jobs:
         run: ls -la
 
       - name: Read environment variables
-        run: echo {{ env.ENV_TEST }} > .env.test
+        run: echo ${{ env.ENV_TEST }} > .env.test
 
       - name: List directory contents
         run: ls -la
