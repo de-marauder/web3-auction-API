@@ -20,6 +20,8 @@ permissions:
   contents: read
 jobs:
   test:
+    permissions:
+      contents: write
     env:
       # Node version to use, defaults to the current LTS version.
       node-version: "18.x"
