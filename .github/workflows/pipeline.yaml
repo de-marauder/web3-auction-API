@@ -37,7 +37,10 @@ jobs:
       - name: Read environment variables
         run: echo {{ env.ENV_TEST }} > .env.test
 
-      - name: run tests
+      - name: Install dependencies
+        run: yarn
+
+      - name: Run tests
         run: yarn test
 
   docker-build-push:
