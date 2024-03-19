@@ -23,7 +23,7 @@ jobs:
     env:
       # Node version to use, defaults to the current LTS version.
       node-version: "16.x"
-      NODE_ENV: "test"
+      ENV_TEST: ${{ secrets.ENV_TEST }}
 
     runs-on: ubuntu-latest
     steps:
@@ -35,14 +35,17 @@ jobs:
           node-version: ${{ env.node-version }}
 
       - name: Read environment variables
-        run: cat {{ env.ENV_TEST }} > .env.test
+        run: echo {{ env.ENV_TEST }} > .env.test
 
       - name: run tests
-        run: NODE_ENV=${{ env.NODE_ENV }} yarn test
+        run: yarn test
 
   docker-build-push:
     needs: test
     runs-on: ubuntu-latest
+    env:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
     steps:
       # https://github.com/actions/checkout
       - name: Checkout codebase
@@ -58,8 +61,8 @@ jobs:
         if: ${{ github.event_name != 'pull_request' }}
         uses: docker/login-action@v2
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+          username: ${{ env.DOCKERHUB_USERNAME }}
+          password: ${{ env.DOCKERHUB_PASSWORD }}
 
       ###############################################
       # Build/Push the API image
@@ -68,8 +71,8 @@ jobs:
         id: build-image
         run: |
           docker image build \
-          --tag ${{ secrets.DOCKERHUB_USERNAME }}/web3-auction-api:latest \
-          --tag ${{ secrets.DOCKERHUB_USERNAME }}/web3-auction-api:${{ env.SHORT_SHA }} \
+          --tag ${{ env.DOCKERHUB_USERNAME }}/web3-auction-api:latest \
+          --tag ${{ env.DOCKERHUB_USERNAME }}/web3-auction-api:${{ env.SHORT_SHA }} \
           .
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/web3-auction-api:latest
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/web3-auction-api:${{ env.SHORT_SHA }}
+          docker push ${{ env.DOCKERHUB_USERNAME }}/web3-auction-api:latest
+          docker push ${{ env.DOCKERHUB_USERNAME }}/web3-auction-api:${{ env.SHORT_SHA }}
