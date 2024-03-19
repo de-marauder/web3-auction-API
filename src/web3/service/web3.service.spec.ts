@@ -24,4 +24,7 @@ describe('Web3Service', () => {
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
+  it('web3 object should be defined', () => {
+    expect(service.web3).toBeDefined();
+  });
 });
