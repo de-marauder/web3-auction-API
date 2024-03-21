@@ -10,7 +10,11 @@ import {
 import { TokenMiddlewareGuard } from 'src/token/guard/token.guard';
 import { TokenDecorator, UseToken } from 'src/token/decorator/token.decorator';
 import { AuctionService } from '../service/auction.service';
-import { SubmitBidDto, deployAuctionDto } from '../dto/auction.dto';
+import {
+  SubmitBidDto,
+  deployAuctionDto,
+  signedTxHashDto,
+} from '../dto/auction.dto';
 import { TokenDataDto } from 'src/token/dto/token.dto';
 import {
   ObjectValidationPipe,
@@ -18,9 +22,11 @@ import {
 } from 'src/utils/pipe/validation.pipe';
 import {
   DeployAuctionDtoValidator,
+  SignedTransactionValidator,
   SubmitBidDtoValidator,
 } from '../validator/auction.validator';
 import { objectIdValidator } from 'src/utils/validator/custom.validator';
+import { TokenDataDtoValidator } from 'src/token/validator/token.validator';
 
 @Controller('auction')
 @UseGuards(TokenMiddlewareGuard)
@@ -79,15 +85,29 @@ export class AuctionController {
     };
   }
 
-  @Post('/deploy')
-  async deployAuctionContract(
+  @Post('/request-unsigned-deployment-transaction')
+  async requestUnsignedAuctionContractDeploymentTransaction(
     @Body(new ObjectValidationPipe(DeployAuctionDtoValidator))
-    { deployerAddress, beneficiaryAddress, biddingDuration }: deployAuctionDto,
+    { beneficiaryAddress, biddingDuration }: deployAuctionDto,
   ) {
-    const auction = await this.auctionService.deployContract(
-      deployerAddress,
-      beneficiaryAddress,
-      biddingDuration,
+    const unsignedTx =
+      await this.auctionService.requestUnsignedDeployContractTransaction(
+        beneficiaryAddress,
+        biddingDuration,
+      );
+    return { unsignedTx };
+  }
+
+  @Post('/save-signed-deployment-transaction')
+  async sendSignedAuctionContractDeploymentTransaction(
+    @TokenDecorator(new ObjectValidationPipe(TokenDataDtoValidator))
+    { id }: TokenDataDto,
+    @Body(new ObjectValidationPipe(SignedTransactionValidator))
+    { signedTxHash }: signedTxHashDto,
+  ) {
+    const auction = await this.auctionService.deploySignedContractTransaction(
+      id,
+      signedTxHash,
     );
     return { auction };
   }

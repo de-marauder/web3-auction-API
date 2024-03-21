@@ -24,30 +24,36 @@ export class AuctionService extends BaseService<Auction> {
     super(AuctionModel);
   }
 
-  async deployContract(
-    deployerAddress: string,
+  async requestUnsignedDeployContractTransaction(
     beneficiaryAddress: string,
     biddingDuration: string,
   ) {
     const bytecode = AuctionContract.bytecode;
-    const contract = new this.web3Service.web3.eth.Contract(
-      AuctionContract.abi,
-    );
     const biddingTime = this.bidService.parsebiddingTime(biddingDuration);
     const contractArguments = [biddingTime, beneficiaryAddress];
-    const deployedContract = await contract
-      .deploy({
-        data: bytecode,
-        arguments: contractArguments,
-      })
-      .send({ from: deployerAddress, gas: AUCTION_CONTRACT_GAS.DEPLOYMENT_FEE })
-      .catch((error) => {
-        this.logger.log(error);
-        throw error;
-      });
+    const unsignedTx =
+      await this.web3Service.requestUnsignedDeployContractTransaction(
+        bytecode,
+        AuctionContract.abi,
+        contractArguments,
+      );
+    return unsignedTx;
+  }
+
+  async deploySignedContractTransaction(creator: string, signedTx: string) {
+    const txReceipt =
+      await this.web3Service.getReceiptWithSignedTransaction(signedTx);
+
+    const deployedAddress = txReceipt.contractAddress;
+
+    const deployedContract = this.web3Service.getContract(
+      AuctionContract.abi,
+      deployedAddress,
+    );
     return await this.AuctionModel.create({
-      contractAddress: deployedContract.options.address,
-      beneficiaryAddress,
+      creator,
+      contractAddress: deployedAddress,
+      beneficiaryAddress: `${await deployedContract.methods.beneficiary().call()}`,
       endTime: this.getTimeString(
         await deployedContract.methods.auctionEndTime().call(),
       ),
@@ -60,7 +66,7 @@ export class AuctionService extends BaseService<Auction> {
     from: string,
     value: string,
   ) {
-    const contract = new this.web3Service.web3.eth.Contract(
+    const contract = this.web3Service.getContract(
       AuctionContract.abi,
       auction.contractAddress,
     );
@@ -103,7 +109,7 @@ export class AuctionService extends BaseService<Auction> {
   }
 
   async hasEnded(auction: AuctionDocument) {
-    const contract = new this.web3Service.web3.eth.Contract(
+    const contract = this.web3Service.getContract(
       AuctionContract.abi,
       auction.contractAddress,
     );

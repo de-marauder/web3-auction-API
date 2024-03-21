@@ -2,6 +2,7 @@ import * as mongoose from 'mongoose';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { dbSchemaOptions } from 'src/database/config/db.config';
 import { Bid } from './bid.schema';
+import { User } from 'src/user/schema/user.schema';
 
 @Schema(dbSchemaOptions)
 export class Auction {
@@ -19,6 +20,9 @@ export class Auction {
 
   @Prop({ type: Boolean, default: false })
   ended: boolean;
+
+  @Prop({ type: mongoose.SchemaTypes.ObjectId, ref: 'User' })
+  creator: User | mongoose.Types.ObjectId;
 }
 
 export type AuctionDocument = Auction & mongoose.Document;

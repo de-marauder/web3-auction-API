@@ -3,6 +3,9 @@ export type deployAuctionDto = {
   beneficiaryAddress: string;
   biddingDuration: string;
 };
+
+export type signedTxHashDto = { signedTxHash: string };
+
 export type SubmitBidDto = {
   value: string;
   from: string;
