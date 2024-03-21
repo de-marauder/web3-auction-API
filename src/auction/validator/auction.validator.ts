@@ -1,5 +1,6 @@
 import * as Joi from 'joi';
 import {
+  SaveSignedBidDto,
   SubmitBidDto,
   deployAuctionDto,
   signedTxHashDto,
@@ -21,9 +22,25 @@ export const SubmitBidDtoValidator = Joi.object<SubmitBidDto>({
     .custom((value: string, helpers: Joi.CustomHelpers) => {
       console.log('Validating value: ', value);
       if (isNaN(+value)) {
+        const error = helpers.error('InvalidBidValue');
+        error.message = `${error.code}: Pass a number as a string`;
+        return error;
       }
-      const error = helpers.error('InvalidBidValue');
-      error.message = `${error.code}: Pass a number as a string`;
-      return error;
+      return value;
+    }),
+});
+
+export const SaveSignedBidDtoValidator = Joi.object<SaveSignedBidDto>({
+  signedTx: stringValidator.required(),
+  value: stringValidator
+    .required()
+    .custom((value: string, helpers: Joi.CustomHelpers) => {
+      console.log('Validating value: ', value);
+      if (isNaN(+value)) {
+        const error = helpers.error('InvalidBidValue');
+        error.message = `${error.code}: Pass a number as a string`;
+        return error;
+      }
+      return value;
     }),
 });

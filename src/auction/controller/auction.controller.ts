@@ -11,6 +11,7 @@ import { TokenMiddlewareGuard } from 'src/token/guard/token.guard';
 import { TokenDecorator, UseToken } from 'src/token/decorator/token.decorator';
 import { AuctionService } from '../service/auction.service';
 import {
+  SaveSignedBidDto,
   SubmitBidDto,
   deployAuctionDto,
   signedTxHashDto,
@@ -22,6 +23,7 @@ import {
 } from 'src/utils/pipe/validation.pipe';
 import {
   DeployAuctionDtoValidator,
+  SaveSignedBidDtoValidator,
   SignedTransactionValidator,
   SubmitBidDtoValidator,
 } from '../validator/auction.validator';
@@ -77,6 +79,40 @@ export class AuctionController {
   ) {
     const auction = await this.auctionService.findByIdOrErrorOut(auctionId);
     const bid = await this.auctionService.makeBid(id, auction, from, value);
+
+    auction.highestBid = bid._id;
+    await auction.save();
+    return {
+      auction: await auction.populate({ path: 'highestBid', populate: 'user' }),
+    };
+  }
+
+  @Get(':auctionId/request-unsigned-bid')
+  async requestUnsignedBid(
+    @Param('auctionId', new StringValidationPipe(objectIdValidator))
+    auctionId: string,
+  ) {
+    const auction = await this.auctionService.findByIdOrErrorOut(auctionId);
+    const unsignedBid = await this.auctionService.requestUnsignedBid(auction);
+
+    return unsignedBid;
+  }
+
+  @Post(':auctionId/save-signed-bid')
+  async saveSignedBid(
+    @TokenDecorator() { id }: TokenDataDto,
+    @Param('auctionId', new StringValidationPipe(objectIdValidator))
+    auctionId: string,
+    @Body(new ObjectValidationPipe(SaveSignedBidDtoValidator))
+    { value, signedTx }: SaveSignedBidDto,
+  ) {
+    const auction = await this.auctionService.findByIdOrErrorOut(auctionId);
+    const bid = await this.auctionService.saveSignedBid(
+      id,
+      auctionId,
+      signedTx,
+      value,
+    );
 
     auction.highestBid = bid._id;
     await auction.save();

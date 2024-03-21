@@ -60,6 +60,62 @@ export class AuctionService extends BaseService<Auction> {
     });
   }
 
+  async requestUnsignedBid(auction: AuctionDocument) {
+    const contract = this.web3Service.getContract(
+      AuctionContract.abi,
+      auction.contractAddress,
+    );
+    try {
+      const receipt = contract.methods.bid();
+      return await this.web3Service.requestUnsignedTransaction(receipt);
+    } catch (error) {
+      this.logger.error(error);
+      if (error instanceof ContractExecutionError) {
+        if (error.innerError.message.includes(Errors.AUCTION_HAS_HIGHER_BID)) {
+          throw new BadRequestException(Errors.AUCTION_HAS_HIGHER_BID);
+        }
+        if (error.innerError.message.includes(Errors.AUCTION_HAS_ENDED)) {
+          throw new BadRequestException(Errors.AUCTION_HAS_ENDED);
+        }
+      }
+      if (error instanceof Web3ValidatorError) {
+        console.log('errors: ', error.errors);
+        if (error.errors[0].params['value'] === undefined) {
+          throw new BadRequestException(Errors.AUCTION_BID_VALUE_INVALID);
+        }
+      }
+      throw error;
+    }
+  }
+
+  async saveSignedBid(
+    userId: string,
+    auctionId: string,
+    signedTx: string,
+    bidValue: string,
+  ) {
+    const txReceipt =
+      await this.web3Service.getReceiptWithSignedTransaction(signedTx);
+
+    // const deployedAddress = txReceipt.contractAddress;
+
+    // const deployedContract = this.web3Service.getContract(
+    //   AuctionContract.abi,
+    //   deployedAddress,
+    // );
+    const bid = await this.bidService.create({
+      auctionId: auctionId,
+      auction: new Types.ObjectId(auctionId),
+      transactionHash: txReceipt.transactionHash as string,
+      bidderAddress: txReceipt.from,
+      userId,
+      user: new Types.ObjectId(userId),
+      bidAmount: bidValue, // await deployedContract.methods.highestBid().call(),
+    });
+
+    return bid;
+  }
+
   async makeBid(
     userId: string,
     auction: AuctionDocument,
@@ -147,7 +203,7 @@ export class AuctionService extends BaseService<Auction> {
       highestBid: auction.highestBid,
       address: auction.contractAddress,
       beneficiary: auction.beneficiaryAddress,
-      endTime: this.getTimeString(auction.endTime),
+      endTime: auction.endTime,
     };
   }
 

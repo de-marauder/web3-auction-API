@@ -10,3 +10,8 @@ export type SubmitBidDto = {
   value: string;
   from: string;
 };
+
+export type SaveSignedBidDto = {
+  value: string;
+  signedTx: string;
+};

@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { EnvConfigEnum } from 'src/config/env.enum';
 import { ContractAbi, default as Web3 } from 'web3';
 import { Web3Account, SignTransactionResult } from 'web3-eth-accounts';
+import { estimateGas } from 'web3/lib/commonjs/eth.exports';
 
 @Injectable()
 export class Web3Service {
@@ -33,7 +34,7 @@ export class Web3Service {
     abi: ContractAbi,
     contractArguments: any[],
   ) {
-    const contract = new this.web3.eth.Contract(abi);
+    const contract = this.getContract(abi);
     const unsignedDeployedTx = contract.deploy({
       data: bytecode,
       arguments: contractArguments,
@@ -43,18 +44,14 @@ export class Web3Service {
     return { estimatedGas, unsignedTxString };
   }
 
-  requestUnsignedTransaction(
-    bytecode: string,
-    abi: ContractAbi,
-    contractArguments: any[],
-  ) {
-    const contract = new this.web3.eth.Contract(abi);
-    const deployedTx = contract.deploy({
-      data: bytecode,
-      arguments: contractArguments,
-    });
-    const unsignedTx = deployedTx.encodeABI();
-    return unsignedTx;
+  async requestUnsignedTransaction(Tx: {
+    encodeABI: () => string;
+    estimateGas: () => Promise<string | bigint>;
+  }) {
+    return {
+      unsignedTx: Tx.encodeABI(),
+      estimatedGas: await Tx.estimateGas(),
+    };
   }
 
   async sendSignedTransaction(signedTransaction: SignTransactionResult) {
@@ -68,7 +65,7 @@ export class Web3Service {
     return this.web3.eth.getTransactionReceipt(txHash);
   }
 
-  getContract(abi: ContractAbi, address: string) {
+  getContract(abi: ContractAbi, address?: string) {
     return new this.web3.eth.Contract(abi, address);
   }
 
