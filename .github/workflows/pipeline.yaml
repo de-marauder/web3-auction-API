@@ -24,6 +24,7 @@ jobs:
       # Node version to use, defaults to the current LTS version.
       node-version: 18
       ENV_TEST: ${{ secrets.ENV_TEST }}
+      ENV_DB_TEST: ${{ secrets.ENV_DB_TEST }}
 
     runs-on: ubuntu-latest
     steps:
@@ -44,6 +45,12 @@ jobs:
           echo '
           ${{ env.ENV_TEST }}
           ' > .env.test
+
+      - name: Read db environment variables
+        run: |
+          echo '
+          ${{ env.ENV_DB_TEST }}
+          ' > .env.db
 
       - name: Install dependencies
         run: yarn
