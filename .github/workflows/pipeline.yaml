@@ -35,6 +35,10 @@ jobs:
         with:
           node-version: ${{ env.node-version }}
 
+      # https://github.com/docker/setup-buildx-action
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Read environment variables
         run: |
           echo '
