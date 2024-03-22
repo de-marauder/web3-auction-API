@@ -24,6 +24,7 @@ jobs:
       # Node version to use, defaults to the current LTS version.
       node-version: 18
       ENV_TEST: ${{ secrets.ENV_TEST }}
+      ENV_DB_TEST: ${{ secrets.ENV_DB_TEST }}
 
     runs-on: ubuntu-latest
     steps:
@@ -35,17 +36,33 @@ jobs:
         with:
           node-version: ${{ env.node-version }}
 
+      # https://github.com/docker/setup-buildx-action
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Read environment variables
         run: |
           echo '
           ${{ env.ENV_TEST }}
-          ' > .env.test
+          ' > .env.test && cp .env.test .env
+
+      - name: Read db environment variables
+        run: |
+          echo '
+          ${{ env.ENV_DB_TEST }}
+          ' > .env.db
 
       - name: Install dependencies
         run: yarn
 
-      - name: Run tests
+      - name: Run unit tests
         run: yarn test
+
+      - name: Run integration tests
+        run: yarn test:int
+
+      - name: Run end to end tests
+        run: yarn test:e2e
 
   docker-build-push:
     needs: test
@@ -53,6 +70,7 @@ jobs:
     env:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
+      GITHUB_BRANCH: "${{ github.branch }}"
       IMAGE_NAME: web3-auction-api
     steps:
       # https://github.com/actions/checkout
@@ -76,12 +94,13 @@ jobs:
       - name: Build and tag image
         id: build-image
         run: |
+          echo "${{ env.GITHUB_BRANCH }}"
           docker image build \
-          --tag "${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest-${{ github.branch }}" \
-          --tag ${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.SHORT_SHA }}-${{ github.branch }} \
+          --tag "${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest-${{ env.GITHUB_BRANCH }}" \
+          --tag ${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.SHORT_SHA }}-${{ env.GITHUB_BRANCH }} \
           .
 
       - name: Push image to image registry
         run: |
-          docker push "${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest-${{ github.branch }}"
-          docker push "${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.SHORT_SHA }}-${{ github.branch }}"
+          docker push "${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest-${{ env.GITHUB_BRANCH }}"
+          docker push "${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.SHORT_SHA }}-${{ env.GITHUB_BRANCH }}"
