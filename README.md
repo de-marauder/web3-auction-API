@@ -81,7 +81,7 @@ Three env files are required.
   WEB3_DEFAULT_ADDRESS=
   ```
 
-- `.env.db`bash: This file contains the environment variables for mongo container environments. These values are used to configure container databases for different environments if you choose to use containers. See [mongo-init script](./mongo-init.sh) for more information on how they are used.
+- `.env.db`: This file contains the environment variables for mongo container environments. These values are used to configure container databases for different environments if you choose to use containers. See [mongo-init script](./mongo-init.sh) for more information on how they are used.
   ```
   MONGO_INITDB_ROOT_bashUSERNAME=<api-user>
   MONGO_INITDB_ROOT_PASSWORD=<password>
@@ -105,7 +105,7 @@ Three env files are required.
   API_PROD_DB_PASSWORD=<api-prod-user-password>
   ```
 
-## Start API
+### Step 4 - Start API
 If using containers,
 - Start in dev mode: `yarn start:docker:dev`
 - Start in prod mode: `yarn start:docker:prod`
