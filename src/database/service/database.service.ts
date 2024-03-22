@@ -26,6 +26,10 @@ export class DatabaseService {
     collections.forEach(async (collection) => {
       await collection.drop();
     });
-    // console.log('Done cleaning database');
+    this.wait(10000);
+  }
+
+  private wait(range: number) {
+    for (let i = 0; i < range; i++) { }
   }
 }

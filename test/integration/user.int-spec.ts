@@ -27,6 +27,10 @@ describe('User module (integration tests)', () => {
     await db.cleanDataBase();
   });
 
+  afterAll(() => {
+    db.getDatabaseConnection().close();
+  });
+
   it('should be defined', () => {
     expect(app).toBeDefined();
   });
@@ -141,6 +145,7 @@ describe('User module (integration tests)', () => {
           password: 'wrong.password',
         })
         .catch((error) => {
+          expect(error).toBeDefined();
           expect(error.status).toBe(400);
         });
 

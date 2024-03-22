@@ -44,8 +44,14 @@ jobs:
       - name: Install dependencies
         run: yarn
 
-      - name: Run tests
+      - name: Run unit tests
         run: yarn test
+
+      - name: Run integration tests
+        run: yarn test:int
+
+      - name: Run end to end tests
+        run: yarn test:e2e
 
   docker-build-push:
     needs: test
@@ -76,6 +82,7 @@ jobs:
       - name: Build and tag image
         id: build-image
         run: |
+          echo "${{ github.branch }}"
           docker image build \
           --tag "${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest-${{ github.branch }}" \
           --tag ${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.SHORT_SHA }}-${{ github.branch }} \
