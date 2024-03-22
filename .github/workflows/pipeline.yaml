@@ -44,7 +44,7 @@ jobs:
         run: |
           echo '
           ${{ env.ENV_TEST }}
-          ' > .env.test
+          ' > .env.test && cp .env.test .env
 
       - name: Read db environment variables
         run: |
