@@ -70,6 +70,7 @@ jobs:
     env:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
+      GITHUB_BRANCH: "${{ github.branch }}"
       IMAGE_NAME: web3-auction-api
     steps:
       # https://github.com/actions/checkout
@@ -93,13 +94,13 @@ jobs:
       - name: Build and tag image
         id: build-image
         run: |
-          echo "${{ github.branch }}"
+          echo "${{ env.GITHUB_BRANCH }}"
           docker image build \
-          --tag "${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest-${{ github.branch }}" \
-          --tag ${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.SHORT_SHA }}-${{ github.branch }} \
+          --tag "${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest-${{ env.GITHUB_BRANCH }}" \
+          --tag ${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.SHORT_SHA }}-${{ env.GITHUB_BRANCH }} \
           .
 
       - name: Push image to image registry
         run: |
-          docker push "${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest-${{ github.branch }}"
-          docker push "${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.SHORT_SHA }}-${{ github.branch }}"
+          docker push "${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest-${{ env.GITHUB_BRANCH }}"
+          docker push "${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.SHORT_SHA }}-${{ env.GITHUB_BRANCH }}"
