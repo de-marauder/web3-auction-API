@@ -2,13 +2,15 @@ import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
-import { envValidator } from './env/validator/env.validator';
 import { DatabaseModule } from './database/database.module';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { RequestLoggerMiddleware } from './utils/middleware/requestLogger.middleware';
 import { TokenMiddleware } from './token/middleware/token.middleware';
 import { TokenModule } from './token/token.module';
+import { AuctionModule } from './auction/auction.module';
+import { Web3Module } from './web3/web3.module';
+import { envConfigValidator } from './config/config.validator';
 
 @Module({
   controllers: [AppController],
@@ -16,13 +18,14 @@ import { TokenModule } from './token/token.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['.env'],
-      validationSchema: envValidator,
+      validationSchema: envConfigValidator,
     }),
     DatabaseModule,
     UserModule,
     AuthModule,
     TokenModule,
+    AuctionModule,
+    Web3Module,
   ],
 })
 export class AppModule {

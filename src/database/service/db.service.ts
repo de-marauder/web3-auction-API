@@ -285,4 +285,8 @@ export class BaseService<C> {
 
     return foundRecord;
   }
+
+  epochTimeToUTCDateString(date: number) {
+    return new Date(date).toUTCString();
+  }
 }

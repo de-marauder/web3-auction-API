@@ -10,3 +10,8 @@ export class PaginationDto {
   limit: number;
   page: number;
 }
+
+export class FilterQuery extends PaginationDto {
+  filterKey: string;
+  filterValue: string;
+}

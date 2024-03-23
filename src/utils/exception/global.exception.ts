@@ -32,8 +32,8 @@ export class GlobalExceptionsFilter extends BaseExceptionFilter {
       message = { message: exception.message, error: exception.name };
     }
 
-    this.logger.error(exception);
-    this.logger.debug(exception?.stack);
+    this.logger.error(exception, exception.stack);
+    console.error(exception);
 
     response.status(status).json({
       status: ResponseStatusEnum.FAIL,

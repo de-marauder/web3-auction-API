@@ -25,10 +25,13 @@ export class UserService extends BaseService<User> {
   }
 
   async verify({ email, code }: VerifyUserDto) {
-    const user = await this.findOneOrErrorOut({ email });
+    const user = await this.findOneSelectAndPopulateOrErrorOut(
+      { email },
+      '+verificationCode',
+    );
 
     if (user.verificationCode !== `${code}`) {
-      throw new BadRequestException();
+      throw new BadRequestException('Invalid verification code');
     }
 
     user.activated = true;

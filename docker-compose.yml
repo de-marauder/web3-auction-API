@@ -1,0 +1,99 @@
+version: '3.8'
+
+services:
+  # Node Backend API
+  backend-dev:
+    build: .
+    container_name: backend-dev
+    restart: on-failure
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=development
+    ports:
+      - "9001:9001" 
+    volumes:
+      - .:/app
+    depends_on:
+      - mongo-dev
+    networks:
+      - dev-network
+
+  backend-prod:
+    image: demarauder/web3-auction-api:latest-
+    container_name: backend-prod
+    restart: on-failure
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+    entrypoint: ["/bin/sh", "-c", "yarn build && yarn start:prod"]
+    ports:
+      - "9002:9001"
+    depends_on:
+      - mongo-prod
+    networks:
+      - app-network
+
+  # Optional MongoDB develepoment service
+  mongo-dev:
+    container_name: mongo-dev
+    image: mongo:5.0.6
+    restart: on-failure
+    env_file:
+      - .env.db
+    environment:
+      - NODE_ENV=development
+    # ports:
+    #   - 27017:27017
+    volumes:
+      - mongodb-data:/data/db
+      - ./mongo-init.sh:/docker-entrypoint-initdb.d/mongo-init.sh
+    networks:
+      - dev-network
+
+  # Optional MongoDB production service
+  mongo-prod:
+    container_name: mongo-prod
+    image: mongo:5.0.6
+    restart: on-failure
+    env_file:
+      - .env.db
+    environment:
+      - NODE_ENV=production
+    # ports:
+    #   - 27019:27017
+    volumes:
+      - mongodb-data-prod:/data/db
+      - ./mongo-init.sh:/docker-entrypoint-initdb.d/mongo-init.sh
+    networks:
+      - app-network
+
+  # Optional MongoDB test service
+  mongo-test:
+    container_name: mongo-test
+    image: mongo:5.0.6
+    env_file:
+      - .env.db
+    environment:
+      - NODE_ENV=test
+    ports:
+      - 27017:27017
+    volumes:
+      - ./mongo-init.sh:/docker-entrypoint-initdb.d/mongo-init.sh
+    networks:
+      - test-network
+
+networks:
+  app-network:
+    driver: bridge
+  test-network:
+    driver: bridge
+  dev-network:
+    driver: bridge
+
+volumes:
+  mongodb-data:
+    driver: local
+  mongodb-data-prod:
+    driver: local

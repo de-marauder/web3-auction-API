@@ -12,9 +12,9 @@ export const arrayValidator = Joi.array();
 export const urlValidator = Joi.string()
   .trim()
   .regex(
-    /(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})/i,
+    /(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,}|http:\/\/localhost+:[0-9]{1,5})/i,
   )
-  .error(() => new Error('please provide a valid link'));
+  .error(new Joi.ValidationError('please provide a valid link', [], null));
 
 export const passwordValidator = Joi.string()
   .trim()
@@ -46,3 +46,5 @@ export const customObjectIdValidator = Joi.custom((value, helpers) => {
     '*': `${value} is not a valid objectId`,
   });
 });
+
+export const hexStringValidator = Joi.string().hex({ prefix: true }).trim();

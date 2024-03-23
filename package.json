@@ -9,15 +9,36 @@
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
+    
+    "start:docker:dev": "docker compose down mongo-dev backend-dev && docker compose up mongo-dev backend-dev",
+    "start:docker:test": "docker compose down mongo-test && docker compose up -d mongo-test && sleep 1",
+    "start:docker:prod": "docker compose down mongo-prod backend-prod && docker compose up -d mongo-prod backend-prod",
+    "stop:docker:test": "docker compose down mongo-test",
+    
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
+    
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:cov": "jest --coverage",
+    
+    "test": "dotenv -e .env.test -- jest",
+    "test:watch": "dotenv -e .env.test -- jest --watch",
+    "test:cov": "dotenv -e .env.test -- jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    
+    "pretest:int": "yarn start:docker:test",
+    "test:int": "dotenv -e .env.test -- jest -i --no-cache --forceExit --detectOpenHandles --config ./jest-int.json",
+    "posttest:int": "yarn stop:docker:test",
+    
+    "pretest:e2e": "yarn start:docker:test",
+    "test:e2e": "dotenv -e .env.test -- jest  -i --no-cache --forceExit --detectOpenHandles --config ./jest-e2e.json",
+    "posttest:e2e": "yarn stop:docker:test",
+    
+    "pretest:int:watch": "yarn start:docker:test",
+    "test:int:watch": "dotenv -e .env.test -- jest -i --no-cache --forceExit --watch --detectOpenHandles --config ./test/integration/jest-int.json",
+    
+    "pretest:e2e:watch": "yarn start-db:test",
+    "test:e2e:watch": "dotenv -e .env.test -- jest -i --no-cache --forceExit --watch --detectOpenHandles --config ./test/integration/jest-int.json"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
@@ -26,11 +47,13 @@
     "@nestjs/mongoose": "^10.0.4",
     "@nestjs/platform-express": "^10.0.0",
     "@types/jsonwebtoken": "^9.0.6",
+    "dotenv-cli": "^7.4.1",
     "joi": "^17.12.2",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.2.1",
     "reflect-metadata": "^0.2.0",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "web3": "^4.6.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",
@@ -38,6 +61,7 @@
     "@nestjs/testing": "^10.0.0",
     "@types/express": "^4.17.17",
     "@types/jest": "^29.5.2",
+    "@types/jsonwebtoken": "^9.0.6",
     "@types/node": "^20.3.1",
     "@types/supertest": "^6.0.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",

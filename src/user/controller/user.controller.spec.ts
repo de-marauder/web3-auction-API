@@ -10,6 +10,7 @@ import { envValidator } from 'src/env/validator/env.validator';
 
 describe('UserController', () => {
   let controller: UserController;
+  let mockUserService: UserService;
   const testCreateUserDto = {
     email: 'johndoe@gmail.com',
     password: '<PASSWORD>',
@@ -46,17 +47,27 @@ describe('UserController', () => {
     }).compile();
 
     controller = module.get<UserController>(UserController);
+    mockUserService = module.get<UserService>(UserService);
   });
 
   describe('Verify user', () => {
+    beforeEach(async () => {
+      mockUserService.findOneSelectAndPopulateOrErrorOut = jest
+        .fn()
+        .mockResolvedValue({
+          ...user,
+          verificationCode: '1234',
+          save: jest.fn().mockResolvedValue(user),
+        });
+    });
     it('should return token', async () => {
-      const verificationDetails = { email: 'johndoe@gmail.com', code: '1234' };
+      const verificationDetails = { email: 'johndoe@gmail.com', code: 1234 };
       const result = await controller.verifyUser(verificationDetails);
       expect(result).toBeDefined();
       expect(result.token).toBeDefined();
     });
     it('should return activated user', async () => {
-      const verificationDetails = { email: 'johndoe@gmail.com', code: '1234' };
+      const verificationDetails = { email: 'johndoe@gmail.com', code: 1234 };
 
       const result = await controller.verifyUser(verificationDetails);
       expect(result).toBeDefined();
