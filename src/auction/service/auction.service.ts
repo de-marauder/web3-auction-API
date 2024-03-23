@@ -110,7 +110,7 @@ export class AuctionService extends BaseService<Auction> {
       await this.web3Service.getReceiptWithSignedTransaction(signedTx);
 
     const bid = this.bidService.findOne({
-      transactionHash: txReceipt.transactionHash,
+      transactionHash: txReceipt.transactionHash as string,
     });
     if (bid) return bid;
 
