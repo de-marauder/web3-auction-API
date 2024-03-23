@@ -7,6 +7,9 @@ import { User } from 'src/user/schema/user.schema';
 @Schema(dbSchemaOptions)
 export class Auction {
   @Prop({ type: String })
+  transactionHash: string;
+
+  @Prop({ type: String })
   contractAddress: string;
 
   @Prop({ type: String })

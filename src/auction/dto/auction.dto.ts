@@ -1,3 +1,5 @@
+import { PayableCallOptions } from 'web3';
+
 export type deployAuctionDto = {
   deployerAddress: string;
   beneficiaryAddress: string;
@@ -15,3 +17,5 @@ export type SaveSignedBidDto = {
   value: string;
   signedTx: string;
 };
+
+export type TxParams = PayableCallOptions & { to: string };

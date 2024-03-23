@@ -6,13 +6,15 @@ import {
   Post,
   Body,
   Param,
+  Query,
 } from '@nestjs/common';
 import { TokenMiddlewareGuard } from 'src/token/guard/token.guard';
 import { TokenDecorator, UseToken } from 'src/token/decorator/token.decorator';
 import { AuctionService } from '../service/auction.service';
 import {
   SaveSignedBidDto,
-  SubmitBidDto,
+  // SubmitBidDto,
+  TxParams,
   deployAuctionDto,
   signedTxHashDto,
 } from '../dto/auction.dto';
@@ -23,12 +25,15 @@ import {
 } from 'src/utils/pipe/validation.pipe';
 import {
   DeployAuctionDtoValidator,
+  PayableCallOptionsValidator,
   SaveSignedBidDtoValidator,
   SignedTransactionValidator,
-  SubmitBidDtoValidator,
+  // SubmitBidDtoValidator,
 } from '../validator/auction.validator';
 import { objectIdValidator } from 'src/utils/validator/custom.validator';
 import { TokenDataDtoValidator } from 'src/token/validator/token.validator';
+import { FilterQuery } from 'src/utils/dto/paginate.dto';
+import { UserService } from 'src/user/service/user.service';
 
 @Controller('auction')
 @UseGuards(TokenMiddlewareGuard)
@@ -36,15 +41,44 @@ import { TokenDataDtoValidator } from 'src/token/validator/token.validator';
 export class AuctionController {
   private logger = new Logger(AuctionController.name);
 
-  constructor(private readonly auctionService: AuctionService) { }
+  constructor(
+    private readonly userService: UserService,
+    private readonly auctionService: AuctionService,
+  ) { }
+
+  @Get('')
+  async findAll(
+    @Query()
+    { filterKey, filterValue, page, limit }: FilterQuery,
+  ) {
+    return await this.auctionService.paginatedResult(
+      { page, limit },
+      { [filterKey]: filterValue },
+      { createdAt: 'desc' },
+    );
+  }
+  @Get(':auctionId')
+  async findOne(@Param('auctionId') auctionId: string) {
+    const auction =
+      await this.auctionService.findOneSelectAndPopulateOrErrorOut(
+        { _id: auctionId },
+        '',
+        [{ path: 'highestBid', populate: 'user', select: '-auction' }],
+      );
+    const ended = await this.auctionService.hasEnded(auction);
+    if (ended !== auction.ended) {
+      auction.ended = ended;
+      await auction.save();
+    }
+    return auction;
+  }
 
   @Get(':auctionId/status')
   async getAuctionStatus(
     @Param('auctionId', new StringValidationPipe(objectIdValidator))
     auctionId: string,
   ) {
-    const data = await this.auctionService.getStatus(auctionId);
-    return { data };
+    return await this.auctionService.getStatus(auctionId);
   }
 
   @Get(':auctionId/history')
@@ -69,33 +103,41 @@ export class AuctionController {
     };
   }
 
-  @Post(':auctionId/submit-bid')
-  async submitBid(
-    @TokenDecorator() { id }: TokenDataDto,
-    @Param('auctionId', new StringValidationPipe(objectIdValidator))
-    auctionId: string,
-    @Body(new ObjectValidationPipe(SubmitBidDtoValidator))
-    { value, from }: SubmitBidDto,
-  ) {
-    const auction = await this.auctionService.findByIdOrErrorOut(auctionId);
-    const bid = await this.auctionService.makeBid(id, auction, from, value);
+  // @Post(':auctionId/submit-bid')
+  // async submitBid(
+  //   @TokenDecorator() { id }: TokenDataDto,
+  //   @Param('auctionId', new StringValidationPipe(objectIdValidator))
+  //   auctionId: string,
+  //   @Body(new ObjectValidationPipe(SubmitBidDtoValidator))
+  //   { value, from }: SubmitBidDto,
+  // ) {
+  //   const auction = await this.auctionService.findByIdOrErrorOut(auctionId);
+  //   const bid = await this.auctionService.makeBid(id, auction, from, value);
 
-    auction.highestBid = bid._id;
-    await auction.save();
-    return {
-      auction: await auction.populate({ path: 'highestBid', populate: 'user' }),
-    };
-  }
+  //   auction.highestBid = bid._id;
+  //   await auction.save();
+  //   return {
+  //     auction: await auction.populate({ path: 'highestBid', populate: 'user' }),
+  //   };
+  // }
 
-  @Get(':auctionId/request-unsigned-bid')
+  @Post(':auctionId/request-unsigned-bid')
   async requestUnsignedBid(
     @Param('auctionId', new StringValidationPipe(objectIdValidator))
     auctionId: string,
+    @Body(new ObjectValidationPipe(PayableCallOptionsValidator))
+    txParams: TxParams,
   ) {
     const auction = await this.auctionService.findByIdOrErrorOut(auctionId);
-    const unsignedBid = await this.auctionService.requestUnsignedBid(auction);
-
-    return unsignedBid;
+    const unsignedBid = await this.auctionService.requestUnsignedBid(
+      auction,
+      txParams,
+    );
+    console.log('unsignedBid: ', unsignedBid);
+    return {
+      ...unsignedBid,
+      estimatedGas: unsignedBid.estimatedGas.toString(),
+    };
   }
 
   @Post(':auctionId/save-signed-bid')
@@ -106,6 +148,7 @@ export class AuctionController {
     @Body(new ObjectValidationPipe(SaveSignedBidDtoValidator))
     { value, signedTx }: SaveSignedBidDto,
   ) {
+    await this.userService.findByIdOrErrorOut(id);
     const auction = await this.auctionService.findByIdOrErrorOut(auctionId);
     const bid = await this.auctionService.saveSignedBid(
       id,
@@ -113,7 +156,6 @@ export class AuctionController {
       signedTx,
       value,
     );
-
     auction.highestBid = bid._id;
     await auction.save();
     return {
