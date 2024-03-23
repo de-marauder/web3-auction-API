@@ -1,4 +1,4 @@
-name: Docker Build and Push
+name: CI Pipeline
 # Run this Build for all pushes and PRs to 'main' and 'dev' branches.
 on:
   push:
