@@ -46,3 +46,5 @@ export const customObjectIdValidator = Joi.custom((value, helpers) => {
     '*': `${value} is not a valid objectId`,
   });
 });
+
+export const hexStringValidator = Joi.string().hex({ prefix: true }).trim();

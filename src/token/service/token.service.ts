@@ -42,7 +42,6 @@ export class TokenService {
   }
 
   verifyToken(token: string): Promise<TokenDataDto> {
-    this.logger.log(token);
     return new Promise((resolve) => {
       jwt.verify(
         token,
@@ -53,7 +52,7 @@ export class TokenService {
             if (err.name === 'TokenExpiredError') {
               throw new UnauthorizedException(Errors.TOKEN_EXPIRED);
             }
-            throw new BadRequestException(err.message);
+            throw new UnauthorizedException(err.message);
           }
           resolve(decoded);
         },

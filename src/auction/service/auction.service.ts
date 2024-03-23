@@ -6,10 +6,11 @@ import { BidService } from '../service/bid.service';
 import { BaseService } from 'src/database/service/db.service';
 import { Web3Service } from 'src/web3/service/web3.service';
 import * as AuctionContract from '../abi/SimpleAuction.json';
-import { AUCTION_CONTRACT_GAS } from '../enum/auction.enum';
+// import { AUCTION_CONTRACT_GAS } from '../enum/auction.enum';
 import { Errors, TimeUnits } from 'src/utils/enums/utils.enums';
 import { ContractExecutionError } from 'web3';
 import { Web3ValidatorError } from 'web3-validator';
+import { TxParams } from '../dto/auction.dto';
 
 @Injectable()
 export class AuctionService extends BaseService<Auction> {
@@ -24,66 +25,63 @@ export class AuctionService extends BaseService<Auction> {
     super(AuctionModel);
   }
 
-  async deployContract(
-    deployerAddress: string,
+  async requestUnsignedDeployContractTransaction(
     beneficiaryAddress: string,
     biddingDuration: string,
   ) {
     const bytecode = AuctionContract.bytecode;
-    const contract = new this.web3Service.web3.eth.Contract(
-      AuctionContract.abi,
-    );
     const biddingTime = this.bidService.parsebiddingTime(biddingDuration);
     const contractArguments = [biddingTime, beneficiaryAddress];
-    const deployedContract = await contract
-      .deploy({
-        data: bytecode,
-        arguments: contractArguments,
-      })
-      .send({ from: deployerAddress, gas: AUCTION_CONTRACT_GAS.DEPLOYMENT_FEE })
-      .catch((error) => {
-        this.logger.log(error);
-        throw error;
-      });
-    return await this.AuctionModel.create({
-      contractAddress: deployedContract.options.address,
-      beneficiaryAddress,
-      endTime: this.getTimeString(
-        await deployedContract.methods.auctionEndTime().call(),
-      ),
-    });
+    const unsignedTx =
+      await this.web3Service.requestUnsignedDeployContractTransaction(
+        bytecode,
+        AuctionContract.abi,
+        contractArguments,
+      );
+    return unsignedTx;
   }
 
-  async makeBid(
-    userId: string,
-    auction: AuctionDocument,
-    from: string,
-    value: string,
-  ) {
-    const contract = new this.web3Service.web3.eth.Contract(
+  async deploySignedContractTransaction(creator: string, signedTx: string) {
+    const txReceipt =
+      await this.web3Service.getReceiptWithSignedTransaction(signedTx);
+
+    const deployedAddress = txReceipt.contractAddress;
+
+    const deployedContract = this.web3Service.getContract(
+      AuctionContract.abi,
+      deployedAddress,
+    );
+    const auction = await this.findOne({
+      contractAddress: deployedAddress,
+    });
+    if (!auction) {
+      return await this.AuctionModel.create({
+        creator,
+        transactionHash: txReceipt.transactionHash,
+        contractAddress: deployedAddress,
+        beneficiaryAddress: `${await deployedContract.methods.beneficiary().call()}`,
+        endTime: this.getTimeString(
+          await deployedContract.methods.auctionEndTime().call(),
+        ),
+      });
+    }
+    return auction;
+  }
+
+  async requestUnsignedBid(auction: AuctionDocument, txParams: TxParams) {
+    const contract = this.web3Service.getContract(
       AuctionContract.abi,
       auction.contractAddress,
     );
-
     try {
-      const receipt = await contract.methods.bid().send({
-        from,
-        value: this.web3Service.web3.utils.toWei(value, 'ether'),
-        gas: AUCTION_CONTRACT_GAS.DEPLOYMENT_FEE,
-      });
-
-      const bid = await this.bidService.create({
-        auctionId: auction.id,
-        auction: auction._id,
-        transactionHash: receipt.transactionHash,
-        bidderAddress: receipt.from,
-        userId,
-        user: new Types.ObjectId(userId),
-        bidAmount: value,
-      });
-
-      return bid;
+      const receipt = contract.methods.bid();
+      txParams.to = auction.contractAddress;
+      return await this.web3Service.requestUnsignedTransaction(
+        receipt,
+        txParams,
+      );
     } catch (error) {
+      this.logger.error(error);
       if (error instanceof ContractExecutionError) {
         if (error.innerError.message.includes(Errors.AUCTION_HAS_HIGHER_BID)) {
           throw new BadRequestException(Errors.AUCTION_HAS_HIGHER_BID);
@@ -102,8 +100,81 @@ export class AuctionService extends BaseService<Auction> {
     }
   }
 
+  async saveSignedBid(
+    userId: string,
+    auctionId: string,
+    signedTx: string,
+    bidValue: string,
+  ) {
+    const txReceipt =
+      await this.web3Service.getReceiptWithSignedTransaction(signedTx);
+
+    const bid = this.bidService.findOne({
+      transactionHash: txReceipt.transactionHash as string,
+    });
+    if (bid) return bid;
+
+    return await this.bidService.create({
+      auctionId: auctionId,
+      auction: new Types.ObjectId(auctionId),
+      transactionHash: txReceipt.transactionHash as string,
+      bidderAddress: txReceipt.from,
+      userId,
+      user: new Types.ObjectId(userId),
+      bidAmount: bidValue,
+    });
+  }
+
+  // async makeBid(
+  //   userId: string,
+  //   auction: AuctionDocument,
+  //   from: string,
+  //   value: string,
+  // ) {
+  //   const contract = this.web3Service.getContract(
+  //     AuctionContract.abi,
+  //     auction.contractAddress,
+  //   );
+
+  //   try {
+  //     const receipt = await contract.methods.bid().send({
+  //       from,
+  //       value: this.web3Service.web3.utils.toWei(value, 'ether'),
+  //       gas: AUCTION_CONTRACT_GAS.DEPLOYMENT_FEE,
+  //     });
+
+  //     const bid = await this.bidService.create({
+  //       auctionId: auction.id,
+  //       auction: auction._id,
+  //       transactionHash: receipt.transactionHash,
+  //       bidderAddress: receipt.from,
+  //       userId,
+  //       user: new Types.ObjectId(userId),
+  //       bidAmount: value,
+  //     });
+
+  //     return bid;
+  //   } catch (error) {
+  //     if (error instanceof ContractExecutionError) {
+  //       if (error.innerError.message.includes(Errors.AUCTION_HAS_HIGHER_BID)) {
+  //         throw new BadRequestException(Errors.AUCTION_HAS_HIGHER_BID);
+  //       }
+  //       if (error.innerError.message.includes(Errors.AUCTION_HAS_ENDED)) {
+  //         throw new BadRequestException(Errors.AUCTION_HAS_ENDED);
+  //       }
+  //     }
+  //     if (error instanceof Web3ValidatorError) {
+  //       console.log('errors: ', error.errors);
+  //       if (error.errors[0].params['value'] === undefined) {
+  //         throw new BadRequestException(Errors.AUCTION_BID_VALUE_INVALID);
+  //       }
+  //     }
+  //     throw error;
+  //   }
+  // }
+
   async hasEnded(auction: AuctionDocument) {
-    const contract = new this.web3Service.web3.eth.Contract(
+    const contract = this.web3Service.getContract(
       AuctionContract.abi,
       auction.contractAddress,
     );
@@ -141,7 +212,7 @@ export class AuctionService extends BaseService<Auction> {
       highestBid: auction.highestBid,
       address: auction.contractAddress,
       beneficiary: auction.beneficiaryAddress,
-      endTime: this.getTimeString(auction.endTime),
+      endTime: auction.endTime,
     };
   }
 
