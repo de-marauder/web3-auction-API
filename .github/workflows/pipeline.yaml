@@ -70,7 +70,7 @@ jobs:
     env:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
-      GITHUB_BRANCH: "${GITHUB_REF##*/}"
+      GITHUB_BRANCH: ${{ github.base_ref || '${GITHUB_REF##*/}' }}
       IMAGE_NAME: web3-auction-api
     steps:
       # https://github.com/actions/checkout
