@@ -9,6 +9,6 @@ import { TokenService } from 'src/token/service/token.service';
   controllers: [UserController],
   providers: [UserService, TokenService],
   imports: [MongooseModule.forFeatureAsync([UserModel])],
-  exports: [MongooseModule.forFeatureAsync([UserModel])],
+  exports: [UserService, MongooseModule.forFeatureAsync([UserModel])],
 })
 export class UserModule { }
