@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Web3 Auction</title>
+  <script src="https://unpkg.com/web3@latest/dist/web3.min.js"></script>
+</head>
+
+<body>
+  <div>
+    <div><input type="text" id="bidding-time" name="bidding-time" placeholder="Bidding time"></div>
+    <div><input type="text" id="beneficiary-address" name="beneficiary-address" placeholder="Beneficiary address"></div>
+    <button id="signButton">Deploy auction</button>
+  </div>
+  <div>
+    <div><input type="text" id="auctionId" name="auctionId" placeholder="Auction ID"></div>
+    <div><input type="text" id="bid-value" name="bid-value" placeholder="Value in ETH"></div>
+    <button id="make-a-bid">Make a Bid</button>
+  </div>
+  <script src="index.js"></script>
+</body>
+
+</html>
