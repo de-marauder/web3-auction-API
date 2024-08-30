@@ -7,8 +7,8 @@
 ### Relevant links
 > [**Base URL**](https://web3-auction-api-latest.onrender.com)<br>
   [**Postman doc**](https://documenter.getpostman.com/view/20767794/2sA2xpRobz) <br>
-  [**Documentation Video** (short video)](https://www.loom.com/share/1652a56513014be69cf03f57a5e3ca81?sid=23233ba0-96fe-4767-b989-b4bc302083bb) <br>
-  [**Documentation Video** (long video)](https://www.loom.com/share/cc4eb32284ab4225a56a15f8486bffaa?sid=d7465901-9f68-4feb-b61f-f7c99515794c)
+  <!-- [**Documentation Video** (short video)](https://www.loom.com/share/1652a56513014be69cf03f57a5e3ca81?sid=23233ba0-96fe-4767-b989-b4bc302083bb) <br> -->
+  <!-- [**Documentation Video** (long video)](https://www.loom.com/share/cc4eb32284ab4225a56a15f8486bffaa?sid=d7465901-9f68-4feb-b61f-f7c99515794c) -->
 
 The service provides RESTful APIs for managing and querying data related to a single auction contract. Authentication is required to access the APIs.
 
